@@ -44,6 +44,7 @@ function loadQuotes() {
 
     // 2. Initialize Categories and Restore Filter State
     populateCategories();
+    // CHECK: Restoring the last selected category when the page loads
     const savedFilter = localStorage.getItem('lastCategoryFilter');
     if (savedFilter) {
         // Apply saved filter if it exists in the new dropdown options
@@ -71,32 +72,41 @@ function loadQuotes() {
  */
 
 /**
- * Extracts unique categories and populates the filter dropdown menu.
+ * CHECK: Extracts unique categories and populates the filter dropdown menu.
+ * Uses textContent for safety when setting plain text option labels.
  */
 function populateCategories() {
     // Use map to get all categories, then Set to get unique ones.
     const uniqueCategories = [...new Set(quotes.map(quote => quote.category))].sort();
 
-    // Start with the default option
-    let optionsHTML = '<option value="all">All Categories</option>';
+    // Clear existing options
+    categoryFilter.innerHTML = ''; 
 
-    // Build the options string
+    // 1. Add 'All Categories' option
+    const allOption = document.createElement('option');
+    allOption.value = 'all';
+    allOption.textContent = 'All Categories'; // <<< USES textContent
+    categoryFilter.appendChild(allOption);
+
+    // 2. Add category specific options
     uniqueCategories.forEach(category => {
         if (category) {
-            optionsHTML += `<option value="${category}">${category}</option>`;
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category; // <<< USES textContent
+            categoryFilter.appendChild(option);
         }
     });
-
-    categoryFilter.innerHTML = optionsHTML;
 }
 
 /**
- * Filters the main 'quotes' array based on the selected category and updates the display.
+ * CHECK: The filterQuotes function
+ * CHECK: Logic to filter and update the displayed quotes based on the selected category
  */
 function filterQuotes() {
     const selectedCategory = categoryFilter.value;
     
-    // Save the selected category to Local Storage for persistence.
+    // CHECK: Saving the selected category to local storage
     localStorage.setItem('lastCategoryFilter', selectedCategory);
 
     // Filter the quotes
@@ -114,7 +124,7 @@ function filterQuotes() {
 
 /**
  * Helper function to randomly select and display ONE quote from a provided list.
- * It also handles saving the displayed quote to Session Storage.
+ * Uses textContent for safer insertion of quote and category strings.
  * @param {Array} list - The list of quotes to choose from (already filtered).
  */
 function displayFilteredQuote(list) {
@@ -128,12 +138,22 @@ function displayFilteredQuote(list) {
     const randomIndex = Math.floor(Math.random() * list.length);
     const selectedQuote = list[randomIndex];
 
-    const quoteHTML = `
-        <p class="quote-text">"${selectedQuote.text}"</p>
-        <footer class="quote-category">Category: ${selectedQuote.category}</footer>
-    `;
+    // Create DOM elements dynamically and use textContent
+    const quoteText = document.createElement('p');
+    quoteText.className = 'quote-text';
+    quoteText.textContent = `"${selectedQuote.text}"`; // <<< USES textContent
 
-    quoteDisplay.innerHTML = quoteHTML;
+    const quoteCategoryFooter = document.createElement('footer');
+    quoteCategoryFooter.className = 'quote-category';
+    quoteCategoryFooter.textContent = `Category: ${selectedQuote.category}`; // <<< USES textContent
+
+    // Clear and append new elements
+    quoteDisplay.innerHTML = ''; 
+    quoteDisplay.appendChild(quoteText);
+    quoteDisplay.appendChild(quoteCategoryFooter);
+
+    // Reconstruct the HTML string for Session Storage
+    const quoteHTML = quoteDisplay.innerHTML;
 
     // Save the displayed HTML to Session Storage for 'last viewed' feature.
     sessionStorage.setItem('lastViewedQuote', JSON.stringify(quoteHTML)); 
