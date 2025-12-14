@@ -12,7 +12,7 @@ const defaultQuotes = [
 ];
 
 let quotes = [];
-const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts'; // Base URL for mock API
+const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts';
 const SYNC_INTERVAL = 5000; 
 let isSyncing = false; 
 
@@ -67,21 +67,16 @@ function loadQuotes() {
  * ========================================
  */
 
-/**
- * CHECK: fetchQuotesFromServer function & Fetching data from the server
- */
 async function fetchServerQuotes() {
     try {
-        // Fetch only a limited set of posts to simulate a recent updates endpoint
         const response = await fetch(`${SERVER_URL}?_limit=5`);
         const serverPosts = await response.json();
 
-        // Map mock posts to our quote structure
         const serverQuotes = serverPosts.map(post => ({
             text: post.title.charAt(0).toUpperCase() + post.title.slice(1), 
             category: 'Server Update',
             id: post.id, 
-            timestamp: Date.now() - (10000 * post.id) // Simulate timestamps
+            timestamp: Date.now() - (10000 * post.id)
         }));
         
         return serverQuotes;
@@ -93,33 +88,29 @@ async function fetchServerQuotes() {
 }
 
 /**
- * CHECK: Posting data to the server using a mock API
- * Simulates sending a new quote to the server.
+ * FIX: Using canonical 'Content-Type' in headers.
  */
 async function postNewQuoteToServer(newQuote) {
     try {
         setSyncStatus("Sending new quote...", 'loading');
         
-        // JSONPlaceholder expects 'title' and 'body'
         const postData = {
             title: newQuote.text,
             body: newQuote.category,
-            userId: 1, // Required by JSONPlaceholder
+            userId: 1, 
         };
 
         const response = await fetch(SERVER_URL, {
             method: 'POST',
             body: JSON.stringify(postData),
             headers: {
-                'Content-type': 'application/json; charset=UTF-8',
+                'Content-Type': 'application/json; charset=UTF-8', // <<< UPDATED TO CANONICAL FORM
             },
         });
         
         const responseData = await response.json();
         
         if (response.ok || response.status === 201) {
-            // Update the locally stored quote with the confirmed server ID and timestamp
-            // NOTE: In JSONPlaceholder, the ID is just the next number (e.g., 101)
             newQuote.id = responseData.id;
             newQuote.timestamp = Date.now();
             saveQuotes();
@@ -138,10 +129,6 @@ async function postNewQuoteToServer(newQuote) {
 }
 
 
-/**
- * CHECK: syncQuotes function & Periodically checking for new quotes
- * CHECK: Updating local storage with server data and conflict resolution
- */
 async function syncQuotes() {
     if (isSyncing) return;
     isSyncing = true;
@@ -161,7 +148,6 @@ async function syncQuotes() {
     let conflictCount = 0;
     const localQuotesMap = new Map();
     
-    // Populate map with current local data
     quotes.forEach(q => localQuotesMap.set(q.id || `local_${q.text.substring(0, 10)}`, q));
     
     serverQuotes.forEach(serverQuote => {
@@ -184,7 +170,6 @@ async function syncQuotes() {
     quotes = Array.from(localQuotesMap.values());
     saveQuotes(); 
 
-    // CHECK: UI elements or notifications for data updates or conflicts
     if (conflictCount > 0) {
         setConflictNotification(
             `Server sync resolved ${conflictCount} conflicts. Server data took precedence.`, 
@@ -201,9 +186,6 @@ async function syncQuotes() {
     isSyncing = false;
 }
 
-/**
- * CHECK: UI elements or notifications for data updates or conflicts
- */
 function setSyncStatus(message, type) {
     const statusElement = document.getElementById('syncStatus');
     if (!statusElement) return;
@@ -357,7 +339,6 @@ function importQuotes(event) {
     reader.readAsText(file);
 }
 
-// *** CRITICAL UPDATE: Call postNewQuoteToServer when adding a new quote ***
 async function handleAddQuote(event) {
     event.preventDefault(); 
 
@@ -365,22 +346,19 @@ async function handleAddQuote(event) {
     const quoteCategory = document.getElementById('quoteCategory').value.trim();
 
     if (quoteText && quoteCategory) {
-        // Create the quote object locally with temporary ID and timestamp
         const newQuote = { 
             text: quoteText, 
             category: quoteCategory,
-            id: `temp_${Date.now()}`, // Temporary ID until server responds
-            timestamp: Date.now()
+            id: `temp_${Date.now()}`, 
+            timestamp: Date.now() 
         };
 
         quotes.push(newQuote);
         saveQuotes(); 
         
-        // Attempt to post to the server immediately
         const success = await postNewQuoteToServer(newQuote);
 
         if (success) {
-            // If post succeeded, the quote object in the array was updated with the real server ID/timestamp.
             populateCategories(); 
             categoryFilter.value = newQuote.category; 
 
@@ -388,8 +366,6 @@ async function handleAddQuote(event) {
             setTimeout(filterQuotes, 1000); 
             event.target.reset();
         } else {
-            // If posting fails, the quote remains in the local array (with the temp ID) 
-            // and the user is notified via setSyncStatus.
             alert("Quote added locally, but failed to sync to the server. It will attempt to sync later.");
         }
         
