@@ -4,18 +4,17 @@
  * ========================================
  */
 
-// Default quotes used only if local storage is empty
 const defaultQuotes = [
-    { text: "The only way to do great work is to love what you do.", category: "Work", timestamp: Date.now() },
-    { text: "Persistence can change failure into extraordinary achievement.", category: "Motivation", timestamp: Date.now() },
-    { text: "Simplicity is the ultimate sophistication.", category: "Design", timestamp: Date.now() },
-    { text: "The mind is everything. What you think you become.", category: "Wisdom", timestamp: Date.now() }
+    { text: "The only way to do great work is to love what you do.", category: "Work", id: 1, timestamp: Date.now() - 100000 },
+    { text: "Persistence can change failure into extraordinary achievement.", category: "Motivation", id: 2, timestamp: Date.now() - 90000 },
+    { text: "Simplicity is the ultimate sophistication.", category: "Design", id: 3, timestamp: Date.now() - 80000 },
+    { text: "The mind is everything. What you think you become.", category: "Wisdom", id: 4, timestamp: Date.now() - 70000 }
 ];
 
-let quotes = []; // The live array of quotes, initialized by loadQuotes()
-const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts?_limit=5'; // Mock API for quotes
-const SYNC_INTERVAL = 5000; // Sync every 5 seconds (for simulation)
-let isSyncing = false; // Flag to prevent multiple concurrent sync operations
+let quotes = [];
+const SERVER_URL = 'https://jsonplaceholder.typicode.com/posts'; // Base URL for mock API
+const SYNC_INTERVAL = 5000; 
+let isSyncing = false; 
 
 
 /**
@@ -24,16 +23,10 @@ let isSyncing = false; // Flag to prevent multiple concurrent sync operations
  * ========================================
  */
 
-/**
- * Saves the current 'quotes' array to Local Storage for persistence.
- */
 function saveQuotes() {
     localStorage.setItem('quotes', JSON.stringify(quotes));
 }
 
-/**
- * Loads quotes and initializes the filtering system, session data, and initial sync.
- */
 function loadQuotes() {
     // 1. Load Data from Local Storage
     const storedQuotes = localStorage.getItem('quotes');
@@ -62,9 +55,9 @@ function loadQuotes() {
         quoteDisplay.innerHTML = `<p class="last-session-quote">Last viewed quote from session:</p>` + JSON.parse(lastQuoteHTML);
     }
     
-    // 5. STEP 1: Start Server Simulation and Sync
-    syncQuotes(); // Initial sync immediately
-    setInterval(syncQuotes, SYNC_INTERVAL); // Periodic sync
+    // Start Server Simulation and Sync
+    syncQuotes(); 
+    setInterval(syncQuotes, SYNC_INTERVAL); 
 }
 
 
@@ -75,32 +68,79 @@ function loadQuotes() {
  */
 
 /**
- * Simulates fetching data from a server and standardizes the quote structure.
- * @returns {Promise<Array>} A promise that resolves with an array of standardized quote objects.
+ * CHECK: fetchQuotesFromServer function & Fetching data from the server
  */
 async function fetchServerQuotes() {
     try {
-        const response = await fetch(SERVER_URL);
+        // Fetch only a limited set of posts to simulate a recent updates endpoint
+        const response = await fetch(`${SERVER_URL}?_limit=5`);
         const serverPosts = await response.json();
 
-        // Map mock posts to our quote structure (Simulating Server data structure)
+        // Map mock posts to our quote structure
         const serverQuotes = serverPosts.map(post => ({
-            text: post.title.charAt(0).toUpperCase() + post.title.slice(1), // Use post title as text
-            category: 'Server Update', // Fixed category for mock data
-            id: post.id, // Unique ID for conflict resolution
-            timestamp: Date.now() - Math.floor(Math.random() * 600000) // Simulate recent/old updates
+            text: post.title.charAt(0).toUpperCase() + post.title.slice(1), 
+            category: 'Server Update',
+            id: post.id, 
+            timestamp: Date.now() - (10000 * post.id) // Simulate timestamps
         }));
         
         return serverQuotes;
     } catch (error) {
         console.error("Error fetching server data:", error);
-        setSyncStatus("Sync Failed", 'error');
+        setSyncStatus("Sync Failed (Network Error)", 'error');
         return [];
     }
 }
 
 /**
- * STEP 2 & 3: Core synchronization function with conflict resolution.
+ * CHECK: Posting data to the server using a mock API
+ * Simulates sending a new quote to the server.
+ */
+async function postNewQuoteToServer(newQuote) {
+    try {
+        setSyncStatus("Sending new quote...", 'loading');
+        
+        // JSONPlaceholder expects 'title' and 'body'
+        const postData = {
+            title: newQuote.text,
+            body: newQuote.category,
+            userId: 1, // Required by JSONPlaceholder
+        };
+
+        const response = await fetch(SERVER_URL, {
+            method: 'POST',
+            body: JSON.stringify(postData),
+            headers: {
+                'Content-type': 'application/json; charset=UTF-8',
+            },
+        });
+        
+        const responseData = await response.json();
+        
+        if (response.ok || response.status === 201) {
+            // Update the locally stored quote with the confirmed server ID and timestamp
+            // NOTE: In JSONPlaceholder, the ID is just the next number (e.g., 101)
+            newQuote.id = responseData.id;
+            newQuote.timestamp = Date.now();
+            saveQuotes();
+            setSyncStatus("Quote posted successfully!", 'success');
+            return true;
+        } else {
+            setSyncStatus(`Post Failed: Status ${response.status}`, 'error');
+            return false;
+        }
+
+    } catch (error) {
+        console.error("Error posting data:", error);
+        setSyncStatus("Post Failed (Connection Error)", 'error');
+        return false;
+    }
+}
+
+
+/**
+ * CHECK: syncQuotes function & Periodically checking for new quotes
+ * CHECK: Updating local storage with server data and conflict resolution
  */
 async function syncQuotes() {
     if (isSyncing) return;
@@ -111,61 +151,58 @@ async function syncQuotes() {
     
     if (serverQuotes.length === 0) {
         isSyncing = false;
-        setSyncStatus("Sync Complete: No server updates found.", 'success');
+        if (document.getElementById('syncStatus').className !== 'sync-status sync-error') {
+            setSyncStatus("Synced successfully.", 'idle');
+        }
         return;
     }
 
     let mergeCount = 0;
     let conflictCount = 0;
-
-    // STEP 2: Implement Data Syncing Logic
-    const localQuotesMap = new Map(quotes.map(q => [q.id || `local_${q.text}`, q]));
+    const localQuotesMap = new Map();
+    
+    // Populate map with current local data
+    quotes.forEach(q => localQuotesMap.set(q.id || `local_${q.text.substring(0, 10)}`, q));
     
     serverQuotes.forEach(serverQuote => {
-        const serverId = serverQuote.id || `server_${serverQuote.text}`;
-        const localQuote = localQuotesMap.get(serverId);
+        const serverKey = serverQuote.id || `server_${serverQuote.text.substring(0, 10)}`;
+        const localQuote = localQuotesMap.get(serverKey);
         
         if (localQuote) {
-            // Conflict Check (Simulated: Server data always takes precedence)
-            // We use timestamps (server's simulated timestamp vs. local timestamp)
+            // Conflict Resolution: Server precedence strategy
             if (serverQuote.timestamp > localQuote.timestamp) {
-                // Server data is newer/takes precedence (Conflict Resolution Strategy)
-                localQuotesMap.set(serverId, serverQuote);
+                localQuotesMap.set(serverKey, serverQuote);
                 conflictCount++;
             }
-            // else: Local quote is newer/already present, keep local.
         } else {
             // New quote from the server
-            localQuotesMap.set(serverId, serverQuote);
+            localQuotesMap.set(serverKey, serverQuote);
             mergeCount++;
         }
     });
 
-    // Update the live quotes array
     quotes = Array.from(localQuotesMap.values());
-    saveQuotes(); // Save updated merged list
+    saveQuotes(); 
 
-    // STEP 3: Conflict Notification
+    // CHECK: UI elements or notifications for data updates or conflicts
     if (conflictCount > 0) {
         setConflictNotification(
             `Server sync resolved ${conflictCount} conflicts. Server data took precedence.`, 
             'warning'
         );
     } else {
-        setConflictNotification('', ''); // Clear notification
+        setConflictNotification('', ''); 
     }
 
-    // Finalize sync and update UI
-    setSyncStatus(`Sync Complete. Added ${mergeCount} new quotes.`, 'success');
+    setSyncStatus(`Sync Complete. Added ${mergeCount} new quote(s).`, 'success');
     populateCategories();
-    filterQuotes(); // Refresh display with potentially new data
+    filterQuotes(); 
     
     isSyncing = false;
 }
 
 /**
- * Updates a dynamic UI element with the current sync status.
- * (Requires adding a <div id="syncStatus"> to the HTML)
+ * CHECK: UI elements or notifications for data updates or conflicts
  */
 function setSyncStatus(message, type) {
     const statusElement = document.getElementById('syncStatus');
@@ -174,53 +211,42 @@ function setSyncStatus(message, type) {
     statusElement.textContent = message;
     statusElement.className = `sync-status sync-${type}`;
     
-    // Auto-clear success messages after a short time
     if (type === 'success') {
         setTimeout(() => {
              if (statusElement.textContent === message) {
-                statusElement.textContent = 'Last synced successfully.';
+                statusElement.textContent = 'Synced successfully.';
                 statusElement.className = 'sync-status sync-idle';
             }
         }, 3000);
     }
 }
 
-/**
- * Updates a dynamic UI element for persistent conflict alerts.
- * (Requires adding a <div id="conflictNotification"> to the HTML)
- */
 function setConflictNotification(message, type) {
     const notificationElement = document.getElementById('conflictNotification');
     if (!notificationElement) return;
 
-    notificationElement.textContent = message;
-    notificationElement.className = `conflict-notification conflict-${type}`;
-
+    notificationElement.innerHTML = message;
+    
     if (type === 'warning' && message) {
-        notificationElement.innerHTML += '<button id="manualConflictBtn" onclick="manualConflictResolution()">Review</button>';
+        notificationElement.className = `conflict-notification conflict-warning`;
+        notificationElement.innerHTML += '<button id="manualConflictBtn">Review Conflicts</button>';
+        document.getElementById('manualConflictBtn').addEventListener('click', manualConflictResolution);
+    } else {
+        notificationElement.className = `conflict-notification`;
     }
 }
 
-/**
- * STEP 3: Placeholder for manual conflict resolution (e.g., opening a modal).
- */
 function manualConflictResolution() {
-    alert("Manual Conflict Resolution System: This would open a modal showing local vs. server versions.");
+    alert("Manual Conflict System (Simulated): This is where a detailed UI would appear to let the user choose which version of the quote to keep.");
 }
 
 
 /**
  * ========================================
  * 4. FILTERING AND DISPLAY FUNCTIONS
- * (Minimal changes, ensured compatibility with new quote structure)
  * ========================================
  */
 
-// ... (populateCategories and filterQuotes remain largely the same, but simplified for brevity here) ...
-
-/**
- * Extracts unique categories and populates the filter dropdown menu.
- */
 function populateCategories() {
     const uniqueCategories = [...new Set(quotes.map(quote => quote.category))].sort();
     categoryFilter.innerHTML = ''; 
@@ -283,37 +309,89 @@ function displayFilteredQuote(list) {
 /**
  * ========================================
  * 5. DATA MANAGEMENT AND EVENT HANDLERS
- * (Updated to add unique ID and timestamp to new quotes)
  * ========================================
  */
 
-// ... (exportQuotes and importQuotes remain the same) ...
+function exportQuotes() { 
+    const jsonString = JSON.stringify(quotes, null, 2); 
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `quotes_export_${Date.now()}.json`;
+    
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+} 
 
-function handleAddQuote(event) {
+function importQuotes(event) { 
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            if (Array.isArray(importedData) && importedData.every(q => typeof q.text === 'string' && typeof q.category === 'string')) {
+                quotes = importedData; 
+                saveQuotes();
+                
+                populateCategories(); 
+                categoryFilter.value = 'all'; 
+                
+                quoteDisplay.innerHTML = `<p class="success">Successfully imported ${quotes.length} quotes! Data has been saved.</p>`;
+                filterQuotes();
+            } else {
+                alert("Import failed: File content is invalid.");
+            }
+        } catch (error) {
+            alert("Import failed: Could not parse file as valid JSON.");
+        }
+    };
+
+    reader.readAsText(file);
+}
+
+// *** CRITICAL UPDATE: Call postNewQuoteToServer when adding a new quote ***
+async function handleAddQuote(event) {
     event.preventDefault(); 
 
     const quoteText = document.getElementById('quoteText').value.trim();
     const quoteCategory = document.getElementById('quoteCategory').value.trim();
 
     if (quoteText && quoteCategory) {
-        // Updated to include ID and timestamp for server compatibility
+        // Create the quote object locally with temporary ID and timestamp
         const newQuote = { 
             text: quoteText, 
             category: quoteCategory,
-            id: Date.now(), // Use time as a unique ID for local quotes
+            id: `temp_${Date.now()}`, // Temporary ID until server responds
             timestamp: Date.now()
         };
 
         quotes.push(newQuote);
         saveQuotes(); 
         
-        populateCategories(); 
-        categoryFilter.value = newQuote.category; 
+        // Attempt to post to the server immediately
+        const success = await postNewQuoteToServer(newQuote);
 
-        quoteDisplay.innerHTML = `<p class="success">Quote added and filter set to new category: ${newQuote.category}.</p>`;
-        setTimeout(filterQuotes, 1000); 
+        if (success) {
+            // If post succeeded, the quote object in the array was updated with the real server ID/timestamp.
+            populateCategories(); 
+            categoryFilter.value = newQuote.category; 
 
-        event.target.reset();
+            quoteDisplay.innerHTML = `<p class="success">Quote added and **synced** to server! Filter set to ${newQuote.category}.</p>`;
+            setTimeout(filterQuotes, 1000); 
+            event.target.reset();
+        } else {
+            // If posting fails, the quote remains in the local array (with the temp ID) 
+            // and the user is notified via setSyncStatus.
+            alert("Quote added locally, but failed to sync to the server. It will attempt to sync later.");
+        }
         
     } else {
         alert("Please ensure both the quote text and a category are entered.");
@@ -321,7 +399,6 @@ function handleAddQuote(event) {
 }
 
 function createAddQuoteForm() {
-    // ... (Your existing form creation logic) ...
     let formContainer = document.getElementById('formContainer');
     if (!formContainer) {
         formContainer = document.createElement('div');
@@ -348,7 +425,8 @@ function createAddQuoteForm() {
     addQuoteForm.addEventListener('submit', handleAddQuote);
 
     const hideFormButton = document.getElementById('hideFormButton');
-    hideFormButton.addEventListener('click', () => formContainer.innerHTML = '');
+    formContainer.style.display = 'flex';
+    hideFormButton.addEventListener('click', () => formContainer.style.display = 'none');
 }
 
 
@@ -358,7 +436,6 @@ function createAddQuoteForm() {
  * ========================================
  */
 
-// Get DOM Elements
 const quoteDisplay = document.getElementById('quoteDisplay');
 const newQuoteButton = document.getElementById('newQuote');
 const addQuoteBtn = document.getElementById('addQuoteBtn');
@@ -366,17 +443,10 @@ const exportButton = document.getElementById('exportQuotes');
 const importFileInput = document.getElementById('importFile');
 const categoryFilter = document.getElementById('categoryFilter');
 
-// Helper functions (for brevity, keeping them here)
-function exportQuotes() { /* ... existing export logic ... */ }
-function importQuotes(event) { /* ... existing import logic ... */ }
+loadQuotes();
 
-// 6a. Initialize: This must run first to load data and set up sync.
-loadQuotes(); // Starts the sync interval
-
-// 6b. Attach Event Listeners
 newQuoteButton.addEventListener('click', filterQuotes);
 addQuoteBtn.addEventListener('click', createAddQuoteForm); 
 
-// Data Management Listeners
 exportButton.addEventListener('click', exportQuotes);
 importFileInput.addEventListener('change', importQuotes);
