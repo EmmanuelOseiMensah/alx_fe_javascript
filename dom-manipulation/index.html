@@ -12,8 +12,8 @@
     <div class="filter-controls">
         <label for="categoryFilter">Filter by Category:</label>
         <select id="categoryFilter" onchange="filterQuotes()">
-            <option value="all">All Categories</option> 
-        </select>
+            <option value="all">All Categories</option>
+            </select>
     </div>
 
     <div id="quoteDisplay"></div>
@@ -34,6 +34,13 @@
         <input type="file" id="importFile" accept=".json" style="display: none;">
     </div>
 
+    <div class="sync-controls">
+        <hr>
+        <h3>Data Synchronization</h3>
+        <button id="syncButton">Sync with Server</button>
+        <div id="syncNotification" class="notification"></div>
+    </div>
+    
     <script src="script.js"></script>
 </body>
 </html>

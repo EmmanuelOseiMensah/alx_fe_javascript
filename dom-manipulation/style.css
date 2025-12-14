@@ -1,7 +1,7 @@
 /* 1. Global Reset and Body Setup */
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #f4f7f6; 
+    background-color: #f4f7f6; /* Light gray/green background */
     color: #34495e;
     margin: 0;
     padding: 20px;
@@ -43,7 +43,7 @@ h1 {
     font-size: 1em;
     cursor: pointer;
     background-color: white;
-    appearance: none; /* Removes default dropdown styling for cross-browser consistency */
+    appearance: none;
 }
 
 /* 4. Quote Display Container */
@@ -165,7 +165,6 @@ button:active, .custom-file-upload:active {
 
 /* 8. Dynamic Form Styles (Injected by JS) */
 #formContainer {
-    /* (Styles for the dynamically generated form remain the same) */
     margin-top: 25px;
     padding: 25px;
     background-color: #ffffff;
@@ -209,7 +208,59 @@ button:active, .custom-file-upload:active {
     background-color: #e74c3c;
 }
 
-/* 9. Utility/Message Classes */
+/* 9. Synchronization Controls and Notifications (NEW SECTION) */
+.sync-controls {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #ecf0f1;
+    border-radius: 8px;
+    max-width: 750px;
+    width: 90%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+#syncButton {
+    background-color: #007bff; /* Blue for sync */
+    color: white;
+    margin-bottom: 15px;
+}
+
+#syncButton:hover {
+    background-color: #0056b3;
+}
+
+#syncNotification {
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    font-weight: bold;
+    min-height: 20px;
+    text-align: center;
+    box-sizing: border-box; /* Ensures padding doesn't affect the layout size */
+}
+
+/* Notification States (used by JS to change color) */
+.notification.syncing {
+    background-color: #f0ad4e; /* Orange for in-progress */
+    color: #fff;
+}
+
+.notification.success {
+    background-color: #5cb85c; /* Green for success */
+    color: #fff;
+}
+
+.notification.warning {
+    background-color: #f0ad4e; /* Yellow for warnings */
+    color: #333;
+}
+
+.notification.error {
+    background-color: #d9534f; /* Red for errors */
+    color: white;
+}
+
+/* 10. Utility/Message Classes */
 .success {
     color: #2ecc71;
     font-weight: bold;

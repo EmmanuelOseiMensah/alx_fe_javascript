@@ -1,8 +1,12 @@
 /**
  * ========================================
- * 1. DATA AND STORAGE SETUP
+ * 1. DATA AND SERVER CONFIGURATION
  * ========================================
  */
+
+// Mock server URL for READ operation (we use JSONPlaceholder /posts)
+const SERVER_READ_URL = 'https://jsonplaceholder.typicode.com/posts';
+const SYNC_INTERVAL_MS = 30000; // Periodic sync every 30 seconds (30 seconds)
 
 // Default quotes used only if local storage is empty
 const defaultQuotes = [
@@ -12,7 +16,7 @@ const defaultQuotes = [
     { text: "The mind is everything. What you think you become.", category: "Wisdom" }
 ];
 
-let quotes = []; // The live array of quotes, initialized by loadQuotes()
+let quotes = []; // The live array of quotes, initialized by initializeApp()
 
 
 /**
@@ -44,17 +48,13 @@ function loadQuotes() {
 
     // 2. Initialize Categories and Restore Filter State
     populateCategories();
-    // CHECK: Restoring the last selected category when the page loads
     const savedFilter = localStorage.getItem('lastCategoryFilter');
-    if (savedFilter) {
-        // Apply saved filter if it exists in the new dropdown options
-        if (categoryFilter.querySelector(`option[value="${savedFilter}"]`)) {
-            categoryFilter.value = savedFilter;
-        }
+    if (savedFilter && categoryFilter.querySelector(`option[value="${savedFilter}"]`)) {
+        categoryFilter.value = savedFilter;
     }
 
     // 3. Display Content (Filter based on the saved state)
-    filterQuotes(); // Use filterQuotes() to honor the saved filter immediately.
+    filterQuotes();
 
     // 4. Load Last Viewed Quote from Session Storage
     const lastQuoteHTML = sessionStorage.getItem('lastViewedQuote');
@@ -67,65 +67,122 @@ function loadQuotes() {
 
 /**
  * ========================================
- * 3. FILTERING FUNCTIONS
+ * 3. SYNC AND CONFLICT RESOLUTION
  * ========================================
  */
 
 /**
- * CHECK: Extracts unique categories and populates the filter dropdown menu.
- * Uses textContent for safety when setting plain text option labels.
+ * Simulates fetching data from the server and performs conflict resolution.
+ * Server data takes precedence (Last-Write-Wins strategy).
+ */
+async function syncData() {
+    const syncNotification = document.getElementById('syncNotification');
+    syncNotification.textContent = 'Syncing...';
+    syncNotification.className = 'notification syncing';
+
+    try {
+        // --- 1. Fetch Server Data ---
+        const response = await fetch(SERVER_READ_URL);
+        if (!response.ok) throw new Error('Server read failed.');
+        
+        const serverPosts = await response.json();
+        
+        // --- 2. Normalize Server Data ---
+        // Simulate normalization: use post title as text, categorize as 'Server Sync'.
+        const serverQuotes = serverPosts.slice(0, 10).map(post => ({
+            text: post.title.substring(0, 80),
+            category: 'Server Sync'
+        }));
+
+        // --- 3. Conflict Resolution (Server Wins) ---
+        let localQuoteCount = quotes.length;
+        let serverQuoteCount = serverQuotes.length;
+        let notificationMessage;
+
+        if (serverQuoteCount > 0) {
+            // Overwrite local quotes with server quotes (Server wins)
+            quotes = serverQuotes;
+            saveQuotes();
+            
+            // Re-initialize UI after data change
+            populateCategories();
+            filterQuotes();
+
+            notificationMessage = `Sync successful: ${serverQuoteCount} quotes loaded from server.`;
+            if (localQuoteCount > serverQuoteCount) {
+                notificationMessage += ` (Overwrote ${localQuoteCount} local quotes)`;
+            }
+
+            syncNotification.textContent = notificationMessage;
+            syncNotification.className = 'notification success';
+        } else {
+            // Server returned no usable data.
+            syncNotification.textContent = 'Sync complete. Server returned no new data.';
+            syncNotification.className = 'notification warning';
+        }
+
+    } catch (error) {
+        console.error("Sync Error:", error);
+        syncNotification.textContent = 'Sync failed. Check console for details.';
+        syncNotification.className = 'notification error';
+    } 
+
+    // Clear notification after a delay
+    setTimeout(() => { syncNotification.textContent = ''; syncNotification.className = 'notification'; }, 5000);
+}
+
+
+/**
+ * ========================================
+ * 4. FILTERING FUNCTIONS
+ * ========================================
+ */
+
+/**
+ * Extracts unique categories and populates the filter dropdown menu.
  */
 function populateCategories() {
-    // Use map to get all categories, then Set to get unique ones.
+    // Get unique categories and sort them alphabetically
     const uniqueCategories = [...new Set(quotes.map(quote => quote.category))].sort();
 
-    // Clear existing options
-    categoryFilter.innerHTML = ''; 
+    let optionsHTML = '<option value="all">All Categories</option>';
 
-    // 1. Add 'All Categories' option
-    const allOption = document.createElement('option');
-    allOption.value = 'all';
-    allOption.textContent = 'All Categories'; // <<< USES textContent
-    categoryFilter.appendChild(allOption);
-
-    // 2. Add category specific options
     uniqueCategories.forEach(category => {
         if (category) {
-            const option = document.createElement('option');
-            option.value = category;
-            option.textContent = category; // <<< USES textContent
-            categoryFilter.appendChild(option);
+            optionsHTML += `<option value="${category}">${category}</option>`;
         }
     });
+
+    categoryFilter.innerHTML = optionsHTML;
+    
+    // Attempt to restore the filter selection after repopulating
+    const savedFilter = localStorage.getItem('lastCategoryFilter');
+    if (savedFilter && categoryFilter.querySelector(`option[value="${savedFilter}"]`)) {
+        categoryFilter.value = savedFilter;
+    }
 }
 
 /**
- * CHECK: The filterQuotes function
- * CHECK: Logic to filter and update the displayed quotes based on the selected category
+ * Filters the main 'quotes' array based on the selected category and updates the display.
  */
 function filterQuotes() {
     const selectedCategory = categoryFilter.value;
     
-    // CHECK: Saving the selected category to local storage
+    // Save the selected category to Local Storage for persistence.
     localStorage.setItem('lastCategoryFilter', selectedCategory);
 
-    // Filter the quotes
     let filteredQuotes;
     if (selectedCategory === 'all') {
         filteredQuotes = quotes;
     } else {
-        // Array.prototype.filter() creates a new array with only elements that pass the test.
         filteredQuotes = quotes.filter(quote => quote.category === selectedCategory);
     }
 
-    // Pass the filtered list to the display helper function.
     displayFilteredQuote(filteredQuotes);
 }
 
 /**
  * Helper function to randomly select and display ONE quote from a provided list.
- * Uses textContent for safer insertion of quote and category strings.
- * @param {Array} list - The list of quotes to choose from (already filtered).
  */
 function displayFilteredQuote(list) {
     if (list.length === 0) {
@@ -134,26 +191,15 @@ function displayFilteredQuote(list) {
         return;
     }
 
-    // Pick a random quote from the filtered list
     const randomIndex = Math.floor(Math.random() * list.length);
     const selectedQuote = list[randomIndex];
 
-    // Create DOM elements dynamically and use textContent
-    const quoteText = document.createElement('p');
-    quoteText.className = 'quote-text';
-    quoteText.textContent = `"${selectedQuote.text}"`; // <<< USES textContent
+    const quoteHTML = `
+        <p class="quote-text">"${selectedQuote.text}"</p>
+        <footer class="quote-category">Category: ${selectedQuote.category}</footer>
+    `;
 
-    const quoteCategoryFooter = document.createElement('footer');
-    quoteCategoryFooter.className = 'quote-category';
-    quoteCategoryFooter.textContent = `Category: ${selectedQuote.category}`; // <<< USES textContent
-
-    // Clear and append new elements
-    quoteDisplay.innerHTML = ''; 
-    quoteDisplay.appendChild(quoteText);
-    quoteDisplay.appendChild(quoteCategoryFooter);
-
-    // Reconstruct the HTML string for Session Storage
-    const quoteHTML = quoteDisplay.innerHTML;
+    quoteDisplay.innerHTML = quoteHTML;
 
     // Save the displayed HTML to Session Storage for 'last viewed' feature.
     sessionStorage.setItem('lastViewedQuote', JSON.stringify(quoteHTML)); 
@@ -162,7 +208,7 @@ function displayFilteredQuote(list) {
 
 /**
  * ========================================
- * 4. JSON IMPORT AND EXPORT FUNCTIONS
+ * 5. JSON IMPORT AND EXPORT FUNCTIONS
  * ========================================
  */
 
@@ -182,7 +228,7 @@ function exportQuotes() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-} 
+}
 
 /**
  * Reads a JSON file uploaded by the user, validates it, and updates application state.
@@ -201,9 +247,8 @@ function importQuotes(event) {
                 quotes = importedData; 
                 saveQuotes();
                 
-                // *** Update Categories and Filter after successful import ***
                 populateCategories(); 
-                categoryFilter.value = 'all'; // Reset filter to 'all' after import
+                categoryFilter.value = 'all'; 
                 
                 quoteDisplay.innerHTML = `<p class="success">Successfully imported ${quotes.length} quotes! Data has been saved.</p>`;
                 filterQuotes();
@@ -221,7 +266,7 @@ function importQuotes(event) {
 
 /**
  * ========================================
- * 5. EVENT HANDLERS
+ * 6. EVENT HANDLERS
  * ========================================
  */
 
@@ -238,14 +283,13 @@ function handleAddQuote(event) {
         const newQuote = { text: quoteText, category: quoteCategory };
 
         quotes.push(newQuote);
-        saveQuotes(); // Save the updated list to Local Storage.
+        saveQuotes(); 
         
-        // *** Update Categories and Filter after adding a new quote ***
-        populateCategories(); // Re-scan for new categories.
-        categoryFilter.value = newQuote.category; // Set filter to the new category.
+        populateCategories(); 
+        categoryFilter.value = newQuote.category;
 
         quoteDisplay.innerHTML = `<p class="success">Quote added and filter set to new category: ${newQuote.category}.</p>`;
-        setTimeout(filterQuotes, 1000); // Wait and then display a filtered quote.
+        setTimeout(filterQuotes, 1000); 
 
         event.target.reset();
         
@@ -258,7 +302,6 @@ function handleAddQuote(event) {
  * Dynamically creates and displays the form to add a new quote.
  */
 function createAddQuoteForm() {
-    // 1. Ensure the form container exists
     let formContainer = document.getElementById('formContainer');
     if (!formContainer) {
         formContainer = document.createElement('div');
@@ -266,7 +309,6 @@ function createAddQuoteForm() {
         document.body.appendChild(formContainer);
     }
     
-    // 2. Prevent the form from being created multiple times
     if (document.getElementById('addQuoteForm')) return;
 
     const formHTML = `
@@ -282,7 +324,6 @@ function createAddQuoteForm() {
     `;
     formContainer.innerHTML = formHTML;
     
-    // 3. Attach listeners to the dynamically created elements
     const addQuoteForm = document.getElementById('addQuoteForm');
     addQuoteForm.addEventListener('submit', handleAddQuote);
 
@@ -293,9 +334,24 @@ function createAddQuoteForm() {
 
 /**
  * ========================================
- * 6. INITIALIZATION
+ * 7. INITIALIZATION
  * ========================================
  */
+
+/**
+ * Starts the application and initializes the periodic sync process.
+ */
+function initializeApp() {
+    // 1. Load initial data from Local Storage
+    loadQuotes(); 
+    
+    // 2. Initial Sync on load (delayed slightly to allow UI to load)
+    setTimeout(syncData, 2000);
+
+    // 3. Set up the periodic sync
+    setInterval(syncData, SYNC_INTERVAL_MS);
+}
+
 
 // Get DOM Elements
 const quoteDisplay = document.getElementById('quoteDisplay');
@@ -304,16 +360,17 @@ const addQuoteBtn = document.getElementById('addQuoteBtn');
 const exportButton = document.getElementById('exportQuotes');
 const importFileInput = document.getElementById('importFile');
 const categoryFilter = document.getElementById('categoryFilter');
+const syncButton = document.getElementById('syncButton');
 
-// 6a. Initialize: This must run first to load data and set up filters.
-loadQuotes();
 
-// 6b. Attach Event Listeners
-// Clicking 'New Quote' now applies the current filter state.
+// Attach Event Listeners
 newQuoteButton.addEventListener('click', filterQuotes);
 addQuoteBtn.addEventListener('click', createAddQuoteForm); 
 
-// Data Management Listeners
 exportButton.addEventListener('click', exportQuotes);
 importFileInput.addEventListener('change', importQuotes);
-// The 'onchange' handler for filterQuotes is already in the HTML.
+
+syncButton.addEventListener('click', syncData); // Manual sync trigger
+
+// Start Application
+initializeApp();
