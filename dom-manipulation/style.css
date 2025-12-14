@@ -1,0 +1,165 @@
+/* 1. Global Styles and Layout Setup */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e9ecef; /* Light, cool background */
+    color: #343a40; /* Dark gray text */
+    margin: 0;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+}
+
+/* 2. Main Heading */
+h1 {
+    color: #17a2b8; /* Professional blue/cyan */
+    margin-bottom: 30px;
+    font-size: 2.2em;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #17a2b8;
+}
+
+/* 3. Quote Display Container */
+#quoteDisplay {
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    border-left: 5px solid #17a2b8; /* Accent border */
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 30px 40px;
+    margin: 20px 0;
+    max-width: 700px;
+    width: 90%;
+    text-align: left; /* Align quote text to the left */
+}
+
+/* Styling for the Quote Text (p.quote-text injected by JS) */
+#quoteDisplay .quote-text {
+    font-size: 1.4em;
+    font-style: italic;
+    line-height: 1.5;
+    margin: 0 0 15px 0;
+    color: #495057;
+}
+
+/* Styling for the Category/Footer (footer.quote-category injected by JS) */
+#quoteDisplay .quote-category {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #17a2b8;
+    display: block; /* Ensure it's on a new line */
+    text-align: right;
+    margin-top: 10px;
+    padding-top: 5px;
+    border-top: 1px dashed #ced4da;
+}
+
+/* 4. Button Styles */
+button {
+    font-size: 1em;
+    font-weight: bold;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 5px;
+    transition: background-color 0.3s, transform 0.1s;
+}
+
+/* Specific style for the primary action button */
+#newQuote {
+    background-color: #28a745; /* Green */
+    color: white;
+}
+
+#newQuote:hover {
+    background-color: #218838;
+}
+
+/* Specific style for the secondary action button */
+#addQuoteBtn {
+    background-color: #007bff; /* Blue */
+    color: white;
+}
+
+#addQuoteBtn:hover {
+    background-color: #0056b3;
+}
+
+/* Active state for all buttons */
+button:active {
+    transform: scale(0.98);
+}
+
+/* 5. Dynamic Form Styles (The form is injected into #formContainer) */
+#formContainer {
+    margin-top: 30px;
+    padding: 25px;
+    background-color: #f8f9fa;
+    border: 1px solid #adb5bd;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    text-align: left;
+}
+
+#addQuoteForm h3 {
+    text-align: center;
+    color: #17a2b8;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+#addQuoteForm label {
+    display: block; /* Make labels take up full width */
+    margin-top: 10px;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+#addQuoteForm input[type="text"],
+#addQuoteForm textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    resize: vertical; /* Allow resizing only vertically for textareas */
+}
+
+/* Styling the buttons inside the form differently */
+#addQuoteForm button {
+    padding: 10px 20px;
+    margin-right: 10px;
+}
+
+#addQuoteForm button[type="submit"] {
+    background-color: #17a2b8;
+}
+
+#addQuoteForm button[type="submit"]:hover {
+    background-color: #138496;
+}
+
+#hideFormButton {
+    background-color: #dc3545; /* Red for the "Hide" action */
+}
+
+#hideFormButton:hover {
+    background-color: #c82333;
+}
+
+/* Error/Success messages (injected by JS) */
+.error {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.success {
+    color: #28a745;
+    font-weight: bold;
+}
