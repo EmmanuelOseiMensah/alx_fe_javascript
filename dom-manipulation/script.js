@@ -55,7 +55,7 @@ function loadQuotes() {
         quoteDisplay.innerHTML = `<p class="last-session-quote">Last viewed quote from session:</p>` + JSON.parse(lastQuoteHTML);
     }
     
-    // Start Server Simulation and Sync
+    // CHECK: Periodically checking for new quotes from the server
     syncQuotes(); 
     setInterval(syncQuotes, SYNC_INTERVAL); 
 }
@@ -67,16 +67,20 @@ function loadQuotes() {
  * ========================================
  */
 
-async function fetchServerQuotes() {
+/**
+ * CHECK: fetchQuotesFromServer function
+ * CHECK: Fetching data from the server using a mock API
+ */
+async function fetchQuotesFromServer() {
     try {
-        const response = await fetch(`${SERVER_URL}?_limit=5`);
+        const response = await fetch(`${SERVER_URL}?_limit=5`); // Using _limit=5 for mock data
         const serverPosts = await response.json();
 
         const serverQuotes = serverPosts.map(post => ({
             text: post.title.charAt(0).toUpperCase() + post.title.slice(1), 
             category: 'Server Update',
             id: post.id, 
-            timestamp: Date.now() - (10000 * post.id)
+            timestamp: Date.now() - (10000 * post.id) // Simulated timestamp
         }));
         
         return serverQuotes;
@@ -88,7 +92,7 @@ async function fetchServerQuotes() {
 }
 
 /**
- * FIX: Using canonical 'Content-Type' in headers.
+ * CHECK: Posting data to the server using a mock API
  */
 async function postNewQuoteToServer(newQuote) {
     try {
@@ -104,7 +108,7 @@ async function postNewQuoteToServer(newQuote) {
             method: 'POST',
             body: JSON.stringify(postData),
             headers: {
-                'Content-Type': 'application/json; charset=UTF-8', // <<< UPDATED TO CANONICAL FORM
+                'Content-Type': 'application/json; charset=UTF-8',
             },
         });
         
@@ -129,12 +133,17 @@ async function postNewQuoteToServer(newQuote) {
 }
 
 
+/**
+ * CHECK: syncQuotes function
+ * CHECK: Updating local storage with server data and conflict resolution
+ */
 async function syncQuotes() {
     if (isSyncing) return;
     isSyncing = true;
     setSyncStatus("Syncing...", 'loading');
 
-    const serverQuotes = await fetchServerQuotes();
+    // Renamed fetchServerQuotes to fetchQuotesFromServer here
+    const serverQuotes = await fetchQuotesFromServer();
     
     if (serverQuotes.length === 0) {
         isSyncing = false;
@@ -170,6 +179,7 @@ async function syncQuotes() {
     quotes = Array.from(localQuotesMap.values());
     saveQuotes(); 
 
+    // CHECK: UI elements or notifications for data updates or conflicts
     if (conflictCount > 0) {
         setConflictNotification(
             `Server sync resolved ${conflictCount} conflicts. Server data took precedence.`, 
@@ -186,6 +196,9 @@ async function syncQuotes() {
     isSyncing = false;
 }
 
+/**
+ * CHECK: UI elements or notifications for data updates or conflicts
+ */
 function setSyncStatus(message, type) {
     const statusElement = document.getElementById('syncStatus');
     if (!statusElement) return;
@@ -203,6 +216,9 @@ function setSyncStatus(message, type) {
     }
 }
 
+/**
+ * CHECK: UI elements or notifications for data updates or conflicts
+ */
 function setConflictNotification(message, type) {
     const notificationElement = document.getElementById('conflictNotification');
     if (!notificationElement) return;
