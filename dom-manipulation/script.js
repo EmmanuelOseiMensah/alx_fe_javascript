@@ -55,7 +55,7 @@ function loadQuotes() {
         quoteDisplay.innerHTML = `<p class="last-session-quote">Last viewed quote from session:</p>` + JSON.parse(lastQuoteHTML);
     }
     
-    // CHECK: Periodically checking for new quotes from the server
+    // Implement periodic data fetching
     syncQuotes(); 
     setInterval(syncQuotes, SYNC_INTERVAL); 
 }
@@ -67,20 +67,16 @@ function loadQuotes() {
  * ========================================
  */
 
-/**
- * CHECK: fetchQuotesFromServer function
- * CHECK: Fetching data from the server using a mock API
- */
 async function fetchQuotesFromServer() {
     try {
-        const response = await fetch(`${SERVER_URL}?_limit=5`); // Using _limit=5 for mock data
+        const response = await fetch(`${SERVER_URL}?_limit=5`); 
         const serverPosts = await response.json();
 
         const serverQuotes = serverPosts.map(post => ({
             text: post.title.charAt(0).toUpperCase() + post.title.slice(1), 
             category: 'Server Update',
             id: post.id, 
-            timestamp: Date.now() - (10000 * post.id) // Simulated timestamp
+            timestamp: Date.now() - (10000 * post.id)
         }));
         
         return serverQuotes;
@@ -91,9 +87,6 @@ async function fetchQuotesFromServer() {
     }
 }
 
-/**
- * CHECK: Posting data to the server using a mock API
- */
 async function postNewQuoteToServer(newQuote) {
     try {
         setSyncStatus("Sending new quote...", 'loading');
@@ -133,22 +126,18 @@ async function postNewQuoteToServer(newQuote) {
 }
 
 
-/**
- * CHECK: syncQuotes function
- * CHECK: Updating local storage with server data and conflict resolution
- */
 async function syncQuotes() {
     if (isSyncing) return;
     isSyncing = true;
     setSyncStatus("Syncing...", 'loading');
 
-    // Renamed fetchServerQuotes to fetchQuotesFromServer here
     const serverQuotes = await fetchQuotesFromServer();
     
     if (serverQuotes.length === 0) {
         isSyncing = false;
         if (document.getElementById('syncStatus').className !== 'sync-status sync-error') {
-            setSyncStatus("Synced successfully.", 'idle');
+            // Updated message to satisfy the requirement
+            setSyncStatus("Quotes synced with server!", 'idle'); 
         }
         return;
     }
@@ -176,10 +165,11 @@ async function syncQuotes() {
         }
     });
 
+    // Update local storage with server data and conflict resolution
     quotes = Array.from(localQuotesMap.values());
     saveQuotes(); 
 
-    // CHECK: UI elements or notifications for data updates or conflicts
+    // UI elements or notifications for data updates or conflicts
     if (conflictCount > 0) {
         setConflictNotification(
             `Server sync resolved ${conflictCount} conflicts. Server data took precedence.`, 
@@ -189,6 +179,7 @@ async function syncQuotes() {
         setConflictNotification('', ''); 
     }
 
+    // This message is for syncs that found new data/merged
     setSyncStatus(`Sync Complete. Added ${mergeCount} new quote(s).`, 'success');
     populateCategories();
     filterQuotes(); 
@@ -196,9 +187,6 @@ async function syncQuotes() {
     isSyncing = false;
 }
 
-/**
- * CHECK: UI elements or notifications for data updates or conflicts
- */
 function setSyncStatus(message, type) {
     const statusElement = document.getElementById('syncStatus');
     if (!statusElement) return;
@@ -209,16 +197,20 @@ function setSyncStatus(message, type) {
     if (type === 'success') {
         setTimeout(() => {
              if (statusElement.textContent === message) {
-                statusElement.textContent = 'Synced successfully.';
+                // Changed to required phrase when settling to idle state after a successful merge
+                statusElement.textContent = 'Quotes synced with server!'; 
                 statusElement.className = 'sync-status sync-idle';
             }
         }, 3000);
     }
+    
+    // Special handling for the required phrase when idle (no new data found)
+    if (type === 'idle' && message === 'Quotes synced with server!') {
+         statusElement.textContent = 'Quotes synced with server!';
+         statusElement.className = 'sync-status sync-idle';
+    }
 }
 
-/**
- * CHECK: UI elements or notifications for data updates or conflicts
- */
 function setConflictNotification(message, type) {
     const notificationElement = document.getElementById('conflictNotification');
     if (!notificationElement) return;
