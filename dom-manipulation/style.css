@@ -1,8 +1,8 @@
 /* 1. Global Reset and Body Setup */
 body {
     font-family: 'Roboto', sans-serif;
-    background-color: #f4f7f6; /* Light gray/green background */
-    color: #34495e; /* Darker text for readability */
+    background-color: #f4f7f6; 
+    color: #34495e;
     margin: 0;
     padding: 20px;
     display: flex;
@@ -21,7 +21,32 @@ h1 {
     border-bottom: 3px solid #3498db;
 }
 
-/* 3. Quote Display Container */
+/* 3. Filtering Controls */
+.filter-controls {
+    margin: 10px 0 20px 0;
+    padding: 10px 20px;
+    background-color: #ecf0f1;
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-controls label {
+    font-weight: 500;
+    margin-right: 10px;
+    color: #2c3e50;
+}
+
+#categoryFilter {
+    padding: 8px 12px;
+    border: 1px solid #bdc3c7;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    background-color: white;
+    appearance: none; /* Removes default dropdown styling for cross-browser consistency */
+}
+
+/* 4. Quote Display Container */
 #quoteDisplay {
     background-color: #ffffff;
     border-left: 6px solid #e74c3c; /* Striking red accent border */
@@ -32,11 +57,11 @@ h1 {
     max-width: 750px;
     width: 90%;
     text-align: left;
-    min-height: 80px; /* Ensures space even if content is brief */
-    transition: all 0.5s ease; /* For smooth transitions when content changes */
+    min-height: 80px;
+    transition: all 0.5s ease;
 }
 
-/* Styling for the Quote Text (injected by JS) */
+/* Quote Text & Category Styles (used by JS) */
 #quoteDisplay .quote-text {
     font-size: 1.5em;
     font-style: italic;
@@ -45,24 +70,23 @@ h1 {
     color: #2c3e50;
 }
 
-/* Styling for the Category/Footer (injected by JS) */
 #quoteDisplay .quote-category {
     font-size: 0.9em;
     font-weight: 500;
-    color: #95a5a6; /* Light gray for subtle category info */
+    color: #95a5a6;
     display: block;
     text-align: right;
     margin-top: 15px;
 }
 
-/* 4. Controls Section (Quote/Add Buttons) */
+/* 5. Controls Section (Quote/Add Buttons) */
 .controls {
     margin: 20px 0;
     display: flex;
     gap: 15px;
 }
 
-/* 5. General Button Styling */
+/* 6. General Button Styling */
 button, .custom-file-upload {
     font-size: 1em;
     font-weight: bold;
@@ -71,7 +95,7 @@ button, .custom-file-upload {
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.3s, transform 0.1s;
-    text-decoration: none; /* For the label element */
+    text-decoration: none;
     display: inline-block;
     text-align: center;
 }
@@ -95,11 +119,11 @@ button, .custom-file-upload {
     background-color: #2980b9;
 }
 
-/* 6. Data Management Section Styling */
+/* 7. Data Management Section Styling */
 .data-management {
     margin-top: 30px;
     padding: 20px;
-    background-color: #ecf0f1; /* Light background for separation */
+    background-color: #ecf0f1;
     border-radius: 8px;
     max-width: 750px;
     width: 90%;
@@ -113,12 +137,6 @@ button, .custom-file-upload {
     margin: 10px 0;
 }
 
-.data-management h3 {
-    color: #2c3e50;
-    margin-top: 10px;
-}
-
-/* Styling for Export Button */
 #exportQuotes {
     background-color: #f39c12; /* Orange */
     color: white;
@@ -129,13 +147,11 @@ button, .custom-file-upload {
     background-color: #e67e22;
 }
 
-/* Styling for Import Label (which acts as a button) */
 .custom-file-upload {
     background-color: #9b59b6; /* Purple */
     color: white;
     padding: 12px 25px;
     margin: 5px;
-    /* Ensure cursor appears clickable */
 }
 
 .custom-file-upload:hover {
@@ -147,9 +163,9 @@ button:active, .custom-file-upload:active {
     transform: scale(0.98);
 }
 
-
-/* 7. Dynamic Form Styles (Form injected by JS into #formContainer) */
+/* 8. Dynamic Form Styles (Injected by JS) */
 #formContainer {
+    /* (Styles for the dynamically generated form remain the same) */
     margin-top: 25px;
     padding: 25px;
     background-color: #ffffff;
@@ -185,27 +201,21 @@ button:active, .custom-file-upload:active {
     resize: vertical;
 }
 
-/* Form Submission/Hide Button Styling */
-#addQuoteForm button {
-    padding: 10px 20px;
-    margin-right: 10px;
-}
-
 #addQuoteForm button[type="submit"] {
     background-color: #3498db;
 }
 
 #hideFormButton {
-    background-color: #e74c3c; /* Red for destructive/hide action */
+    background-color: #e74c3c;
 }
 
-/* 8. Utility Classes (Used for JS messages) */
+/* 9. Utility/Message Classes */
 .success {
-    color: #2ecc71; /* Green */
+    color: #2ecc71;
     font-weight: bold;
 }
 
 .error, .last-session-quote {
-    color: #e74c3c; /* Red/Maroon */
+    color: #e74c3c;
     font-weight: bold;
 }
