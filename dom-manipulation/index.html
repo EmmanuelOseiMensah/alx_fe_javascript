@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="style.css"> 
-    <title>Dynamic Quote Generator</title>
+    <title>Dynamic Quote Generator (Synced)</title>
 </head>
 <body>
     <h1>Dynamic Quote Generator</h1>
@@ -12,8 +12,8 @@
     <div class="filter-controls">
         <label for="categoryFilter">Filter by Category:</label>
         <select id="categoryFilter" onchange="filterQuotes()">
-            <option value="all">All Categories</option>
-            </select>
+            <option value="all">All Categories</option> 
+        </select>
     </div>
 
     <div id="quoteDisplay"></div>
@@ -25,22 +25,22 @@
 
     <div class="data-management">
         <hr>
-        <h3>Data Management</h3>
+        <h3>Data Management & Sync</h3>
+        
+        <div id="conflictNotification" class="conflict-notification"></div>
+        
         <button id="exportQuotes">Export Quotes (JSON)</button>
         
         <label for="importFile" class="custom-file-upload">
             Import Quotes (JSON)
         </label>
         <input type="file" id="importFile" accept=".json" style="display: none;">
+
+        <div id="syncStatus" class="sync-status">Initializing...</div>
     </div>
 
-    <div class="sync-controls">
-        <hr>
-        <h3>Data Synchronization</h3>
-        <button id="syncButton">Sync with Server</button>
-        <div id="syncNotification" class="notification"></div>
-    </div>
-    
+    <div id="formContainer" class="form-modal-container"></div> 
+
     <script src="script.js"></script>
 </body>
 </html>

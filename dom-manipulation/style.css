@@ -1,272 +1,299 @@
-/* 1. Global Reset and Body Setup */
+/* ========================================================================= */
+/* 1. GLOBAL & LAYOUT STYLES */
+/* ========================================================================= */
+
 body {
-    font-family: 'Roboto', sans-serif;
-    background-color: #f4f7f6; /* Light gray/green background */
-    color: #34495e;
-    margin: 0;
-    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f7f9fc; /* Light, subtle background */
+    color: #333;
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 20px;
+    margin: 0;
     min-height: 100vh;
-    text-align: center;
 }
 
-/* 2. Main Heading */
 h1 {
-    color: #3498db; /* Primary blue */
-    margin-bottom: 30px;
-    font-size: 2.4em;
-    padding-bottom: 10px;
-    border-bottom: 3px solid #3498db;
+    color: #1a73e8; /* Google-style blue for prominence */
+    margin-bottom: 20px;
+    font-weight: 300;
 }
 
-/* 3. Filtering Controls */
+hr {
+    width: 100%;
+    border: 0;
+    border-top: 1px solid #e0e0e0;
+    margin: 15px 0;
+}
+
+/* ========================================================================= */
+/* 2. CONTROLS & FILTERING */
+/* ========================================================================= */
+
 .filter-controls {
-    margin: 10px 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    background-color: #fff;
     padding: 10px 20px;
-    background-color: #ecf0f1;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .filter-controls label {
     font-weight: 500;
-    margin-right: 10px;
-    color: #2c3e50;
 }
 
 #categoryFilter {
     padding: 8px 12px;
-    border: 1px solid #bdc3c7;
+    border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 1em;
     cursor: pointer;
-    background-color: white;
-    appearance: none;
+    background-color: #fff;
 }
 
-/* 4. Quote Display Container */
-#quoteDisplay {
-    background-color: #ffffff;
-    border-left: 6px solid #e74c3c; /* Striking red accent border */
-    border-radius: 8px;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-    padding: 30px 40px;
-    margin: 20px 0;
-    max-width: 750px;
-    width: 90%;
-    text-align: left;
-    min-height: 80px;
-    transition: all 0.5s ease;
-}
-
-/* Quote Text & Category Styles (used by JS) */
-#quoteDisplay .quote-text {
-    font-size: 1.5em;
-    font-style: italic;
-    line-height: 1.5;
-    margin: 0 0 10px 0;
-    color: #2c3e50;
-}
-
-#quoteDisplay .quote-category {
-    font-size: 0.9em;
-    font-weight: 500;
-    color: #95a5a6;
-    display: block;
-    text-align: right;
-    margin-top: 15px;
-}
-
-/* 5. Controls Section (Quote/Add Buttons) */
 .controls {
-    margin: 20px 0;
+    margin-bottom: 30px;
     display: flex;
     gap: 15px;
 }
 
-/* 6. General Button Styling */
 button, .custom-file-upload {
-    font-size: 1em;
-    font-weight: bold;
-    padding: 12px 25px;
+    padding: 12px 20px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.3s, transform 0.1s;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
+    transition: all 0.2s ease-in-out;
+    font-size: 1em;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Specific Styles for Primary/Secondary Buttons */
 #newQuote {
-    background-color: #2ecc71; /* Green: Primary Action */
+    background-color: #1a73e8;
     color: white;
 }
 
 #newQuote:hover {
-    background-color: #27ae60;
+    background-color: #1664c7;
+    transform: translateY(-1px);
 }
 
 #addQuoteBtn {
-    background-color: #3498db; /* Blue: Secondary Action */
-    color: white;
+    background-color: #fbbc05;
+    color: #333;
 }
 
 #addQuoteBtn:hover {
-    background-color: #2980b9;
+    background-color: #e0ac04;
+    transform: translateY(-1px);
 }
 
-/* 7. Data Management Section Styling */
-.data-management {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #ecf0f1;
-    border-radius: 8px;
-    max-width: 750px;
-    width: 90%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
+/* ========================================================================= */
+/* 3. QUOTE DISPLAY */
+/* ========================================================================= */
 
-.data-management hr {
-    border: 0;
-    height: 1px;
-    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(52, 152, 219, 0.75), rgba(0, 0, 0, 0));
-    margin: 10px 0;
-}
-
-#exportQuotes {
-    background-color: #f39c12; /* Orange */
-    color: white;
-    margin-right: 15px;
-}
-
-#exportQuotes:hover {
-    background-color: #e67e22;
-}
-
-.custom-file-upload {
-    background-color: #9b59b6; /* Purple */
-    color: white;
-    padding: 12px 25px;
-    margin: 5px;
-}
-
-.custom-file-upload:hover {
-    background-color: #8e44ad;
-}
-
-/* Press effect for all buttons */
-button:active, .custom-file-upload:active {
-    transform: scale(0.98);
-}
-
-/* 8. Dynamic Form Styles (Injected by JS) */
-#formContainer {
-    margin-top: 25px;
-    padding: 25px;
+#quoteDisplay {
     background-color: #ffffff;
-    border: 1px solid #bdc3c7;
+    border-left: 5px solid #1a73e8;
     border-radius: 8px;
-    max-width: 500px;
+    padding: 30px;
+    margin: 20px 0;
     width: 90%;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    text-align: left;
+    max-width: 650px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-#formContainer h3 {
+.quote-text {
+    font-size: 1.7em;
+    font-style: italic;
+    margin-bottom: 15px;
+    line-height: 1.4;
+    color: #444;
+}
+
+.quote-category {
+    font-size: 0.9em;
+    color: #777;
+    font-weight: 500;
+    display: block; /* Ensure it's on its own line */
+    margin-top: 10px;
+}
+
+/* ========================================================================= */
+/* 4. DATA MANAGEMENT & SYNC */
+/* ========================================================================= */
+
+.data-management {
+    width: 90%;
+    max-width: 650px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    
+    display: flex;
+    flex-wrap: wrap; /* Allows wrapping on smaller screens */
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.data-management h3 {
+    width: 100%;
+    color: #4285f4;
+    margin: 0 0 15px 0;
+}
+
+#exportQuotes, .custom-file-upload {
+    background-color: #6c757d;
+    color: white;
     text-align: center;
-    color: #3498db;
+    display: inline-block;
+}
+
+#exportQuotes:hover, .custom-file-upload:hover {
+    background-color: #5a6268;
+}
+
+/* --- Sync Status Indicator (Crucial for user feedback) --- */
+
+#syncStatus {
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-top: 10px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.sync-status.sync-loading {
+    background-color: #fbbc05; /* Yellow/Warning */
+    color: #333;
+}
+
+.sync-status.sync-success {
+    background-color: #34a853; /* Green/Success */
+    color: white;
+}
+
+.sync-status.sync-error {
+    background-color: #ea4335; /* Red/Error */
+    color: white;
+}
+
+.sync-status.sync-idle {
+    background-color: #e8f0fe; /* Light Blue/Idle */
+    color: #1a73e8;
+}
+
+/* --- Conflict Notification Area --- */
+
+#conflictNotification {
+    width: 100%;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: 500;
+    border-left: 5px solid;
+    display: none; /* Hidden by default, shown by JS */
+}
+
+.conflict-notification.conflict-warning {
+    background-color: #fff3cd; 
+    color: #856404; 
+    border-color: #ffc107;
+    display: block; /* Show when JS sets this class */
+}
+
+.conflict-notification button {
+    margin-left: 15px;
+    padding: 8px 15px;
+    background-color: #e0ac04; 
+    color: white;
+    border: none;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+/* ========================================================================= */
+/* 5. ADD QUOTE FORM MODAL */
+/* ========================================================================= */
+
+#formContainer {
+    /* Styles to make it a fullscreen, centered modal */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
+    display: none; /* Hidden by default, shown by JS */
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+#addQuoteForm {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    width: 90%;
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease-out; /* Simple entry animation */
+}
+
+#addQuoteForm h3 {
+    color: #1a73e8;
+    margin-top: 0;
     margin-bottom: 20px;
 }
 
 #addQuoteForm label {
-    display: block;
-    margin-top: 10px;
     margin-bottom: 5px;
     font-weight: 600;
+    color: #555;
 }
 
-#addQuoteForm input[type="text"],
+#addQuoteForm input[type="text"], 
 #addQuoteForm textarea {
-    width: 100%;
     padding: 10px;
     margin-bottom: 15px;
-    border: 1px solid #bdc3c7;
+    border: 1px solid #ddd;
     border-radius: 4px;
-    box-sizing: border-box; 
+    font-size: 1em;
+}
+
+#addQuoteForm textarea {
     resize: vertical;
 }
 
 #addQuoteForm button[type="submit"] {
-    background-color: #3498db;
+    background-color: #34a853; /* Green submit button */
+    color: white;
+    margin-top: 10px;
 }
 
 #hideFormButton {
-    background-color: #e74c3c;
-}
-
-/* 9. Synchronization Controls and Notifications (NEW SECTION) */
-.sync-controls {
-    margin-top: 30px;
-    padding: 20px;
-    background-color: #ecf0f1;
-    border-radius: 8px;
-    max-width: 750px;
-    width: 90%;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-#syncButton {
-    background-color: #007bff; /* Blue for sync */
+    background-color: #ea4335; /* Red cancel button */
     color: white;
-    margin-bottom: 15px;
-}
-
-#syncButton:hover {
-    background-color: #0056b3;
-}
-
-#syncNotification {
-    padding: 10px;
-    border-radius: 4px;
     margin-top: 10px;
-    font-weight: bold;
-    min-height: 20px;
-    text-align: center;
-    box-sizing: border-box; /* Ensures padding doesn't affect the layout size */
 }
 
-/* Notification States (used by JS to change color) */
-.notification.syncing {
-    background-color: #f0ad4e; /* Orange for in-progress */
-    color: #fff;
-}
-
-.notification.success {
-    background-color: #5cb85c; /* Green for success */
-    color: #fff;
-}
-
-.notification.warning {
-    background-color: #f0ad4e; /* Yellow for warnings */
-    color: #333;
-}
-
-.notification.error {
-    background-color: #d9534f; /* Red for errors */
-    color: white;
-}
-
-/* 10. Utility/Message Classes */
-.success {
-    color: #2ecc71;
-    font-weight: bold;
-}
-
-.error, .last-session-quote {
-    color: #e74c3c;
-    font-weight: bold;
+/* Animation for Modal */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
